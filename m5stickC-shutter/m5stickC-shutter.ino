@@ -18,6 +18,8 @@ int cur_side_value = 0;
 int radarLine = 0;
 int radarColour = ORANGE;
 
+uint8_t brightness = 100;
+
 BleKeyboard bleKeyboard;
 
 void setup() {
@@ -25,10 +27,15 @@ void setup() {
   M5.begin();
 
   // Init LCD
+  M5.Lcd.setBrightness(brightness);
   M5.Lcd.fillScreen(BLACK);
   M5.Lcd.setRotation(1);
   pinMode(frontButton, INPUT);
   pinMode(sideButton, INPUT);
+
+  drawBatteryPercentage();
+
+  delay(1000);
   
   bleKeyboard.begin();
 }
@@ -67,44 +74,27 @@ void loop() {
     last_side_value = cur_side_value;
   }
 
-
   drawStatusIndicator();
-
-//  if(bleKeyboard.isConnected()) {
-//    M5.Lcd.fillScreen(GREEN);
-////    Serial.println("Sending 'Hello world'...");
-////    bleKeyboard.print("Hello world");
-////
-////    delay(1000);
-////
-////    Serial.println("Sending Enter key...");
-////    bleKeyboard.write(KEY_RETURN);
-//
-//    delay(1000);
-//
-//    bleKeyboard.write(KEY_MEDIA_VOLUME_UP);
-//
-//    delay(1000);
-//
-//    bleKeyboard.write(KEY_MEDIA_VOLUME_DOWN);
-//
-////    Serial.println("Sending Ctrl+Alt+Delete...");
-////    bleKeyboard.press(KEY_LEFT_CTRL);
-////    bleKeyboard.press(KEY_LEFT_ALT);
-////    bleKeyboard.press(KEY_DELETE);
-////    delay(100);
-////    bleKeyboard.releaseAll();
-//
-//  }
-//  
-//  M5.Lcd.setCursor(20, 10);
-//  M5.Lcd.printf("Waiting for connection...");
-//  
-//  delay(5000);
+  drawBatteryPercentage();
 }
 
 void drawStatusIndicator(){
   M5.Lcd.fillCircle(15, 15, 5, millis()%1000 > 500 ? GREEN : BLACK);
+}
+
+void drawBatteryPercentage(){
+  M5.Lcd.setRotation(0);
+  M5.Lcd.setCursor(8, 8);
+  M5.Lcd.setTextColor(WHITE);
+  M5.Lcd.setTextSize(2);
+  M5.Lcd.printf("%d%%",getBatteryPercentage());
+  M5.Lcd.setRotation(1);
+}
+
+int getBatteryPercentage(){
+  uint16_t vbatData = M5.Axp.GetVbatData();
+  double vbat = vbatData * 1.1 / 1000;
+  return ((int)(100.0 * ((vbat - 3.0) / (4.07 - 3.0)))/10)*10;
 }
 
 void drawRadar(){
